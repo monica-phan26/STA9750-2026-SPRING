@@ -1,0 +1,21 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "STA 9750 Submission Material"
+  description:
+    Course Projects for STA 9750 at Baruch College
+  site-url: "https://monica-phan26.github.io/STA9750-2026-SPRING/"
+  navbar:
+    background: primary
+    search: false
+    
+format:
+  html:
+    theme: journal
+    mainfont: "Lato"
+    toc: false
+
+editor:
+  mode: source

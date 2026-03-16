@@ -1,0 +1,43 @@
+peer_feedback_assignment_1:
+  issue_number: 6
+  issue_owner: jalfred259806
+  issue_ok: yes
+  issue_status: OK
+  overall_comments:
+    positive: |-
+      This website has a clear structure, featuring an introduction, a resume link, and a display map
+      it includes clear personal identification, with the name prominently displayed at the top, and a resume link that allows visitors to easily view the owers'professional information
+    negative: It should include a photo to strenthen personal branding
+    advice: I think it is fine for this project
+  scores: []
+  mp_number: 0.0
+peer_feedback_assignment_2:
+  issue_number: 8
+  issue_owner: maryononye
+  issue_ok: yes
+  issue_status: OK
+  overall_comments:
+    positive: |-
+      This website uses a personalized theme that reflects the owner's identity
+      This website has clear structure with content organized into sections using headings
+    negative: I cannot find any
+    advice: I think this website is fine
+  scores: []
+  mp_number: 0.0
+peer_feedback_assignment_3:
+  issue_number: 12
+  issue_owner: carmine-montaperto
+  issue_ok: yes
+  issue_status: OK
+  overall_comments:
+    positive: |-
+      The website has clear structure with content separated into sections using headings
+      This website incorporates a map visualization to enhance the presentation of information.
+    negative: |-
+      The website header should display the owner's name instead of the project number
+      Should apply a theme (maybe)
+    advice: Add more information is enough
+  scores: []
+  mp_number: 0.0
+evaluator: monica-phan26
+

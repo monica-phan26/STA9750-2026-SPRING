@@ -1,0 +1,1352 @@
+---
+title: "MINI PROJECT 03 - Who Goes There? US Internal Migration and Implications for Congressional Reapportionment"
+Author: Monica Phan
+format: 
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+css: styles.css
+---
+
+
+# 1. DATA ACQUISITION
+```{r}
+library(tidyverse)
+library(tidycensus)
+library(sf)
+library(gt)
+library(glue)
+library(readxl)
+library(stringr)
+
+options(tigris_use_cache = TRUE)
+
+years <- 2015:2024
+
+pop2015_2024 <- map_dfr(years, \(yr) {
+  tryCatch({
+    get_acs(
+      geography = "state",
+      variables = "B01003_001",
+      year = yr,
+      survey = "acs1",
+      geometry = TRUE,
+      cache_table = TRUE
+    ) |>
+      mutate(year = yr)
+  }, error = function(e) {
+    message(glue("Skipping year {yr}: {e$message}"))
+    return(NULL)
+  })
+})
+
+pop_bystate <- pop2015_2024 |>
+  st_drop_geometry() |>
+  transmute(
+    total_population = estimate,
+    state = NAME,
+    year = year
+  )
+
+pop_bystate |>
+  slice_head(n = 20) |>
+  gt() |>
+  tab_header(
+    title = "State-Level Total Population",
+    subtitle = "Year 2015-2024"
+  ) |>
+  fmt_number(
+    columns = total_population,
+    decimals = 0
+  )
+
+```
+
+### Data Acquisition - State-to-State Flows 2024
+
+```{r}
+
+state_to_state_migration_2024 <- function() {
+  
+#Create the data folder
+dir.create("data/mp03", recursive = TRUE, showWarnings = FALSE)
+
+#Download the file 2024 if only it does not already exist
+
+file_url <- "https://www2.census.gov/programs-surveys/demo/tables/geographic-mobility/2024/state-to-state-migration/State_to_State_Migration_Table_2024_T13.xlsx"
+
+file_path <- "data/mp03/migration_2024.xlsx"
+
+if(!file.exists(file_path)) {
+  download.file(file_url, file_path, mode = "wb")
+}
+
+#Read the "table" sheet and rename columns, remove the last column.
+
+moving_flow_raw <- read_excel(
+  file_path,
+  sheet = "Table",
+  skip = 8,
+  col_names = c("state_current", "state_1y", "population", "moe")
+  )|>
+  select(state_current, state_1y, population)
+
+#Clean the "table" sheet
+
+moving_flows <- moving_flow_raw |>
+  filter(
+    state_current %in% state.name,
+    state_1y %in% state.name,
+    state_current != state_1y
+  ) |>
+  mutate(
+    population = recode(population, "N" = "0"),
+    population = as.integer(gsub(",", "", population))
+  ) |>
+  transmute(
+    state_current,
+    state_1y,
+    population,
+    year_current = 2024,
+    year_1y = 2023
+  )
+
+# Read "Supplemental - Current Res" sheet
+stationary_flows <- read_excel(
+  file_path,
+  sheet = "Supplemental - Current Res",
+  range = "A11:F100",
+  col_names = FALSE,
+  col_types = "text"
+) |>
+  select(
+    state_current = 1,
+    same_house = 4,
+    same_state = 6
+  ) |>
+  mutate(
+    state_current = str_squish(state_current),
+    same_house = as.integer(gsub(",", "", same_house)),
+    same_state = as.integer(gsub(",", "", same_state))
+  ) |>
+  filter(state_current %in% state.name) |>
+  mutate(
+    population = same_house + same_state
+  ) |>
+  transmute(
+    state_current,
+    state_1y = state_current,
+    population,
+    year_current = 2024,
+    year_1y = 2023
+  )
+
+# Combine population from the moving flow and stationary flow
+
+migration_2024 <- bind_rows(moving_flows, stationary_flows)
+
+return(migration_2024)
+}
+```
+
+View the combined table:
+
+```{r}
+migration_2024 <- state_to_state_migration_2024()
+glimpse(migration_2024)
+```
+
+```{r}
+migration_2024 |>
+  slice_head(n = 20) |>
+  gt() |>
+  tab_header(
+    title = "State-to-State Migration (2024)",
+    subtitle = "Including Moving and Stationary Population"
+  )
+```
+
+### Data Acquisition - State-to-State Flows 2023
+
+
+```{r}
+
+state_to_state_migration_2023 <- function() {
+  
+#Create the data folder
+dir.create("data/mp03", recursive = TRUE, showWarnings = FALSE)
+
+#Download the file 2023 if only it does not already exist
+
+file_url <- "https://www2.census.gov/programs-surveys/demo/tables/geographic-mobility/2023/state-to-state-migration/State_to_State_Migration_Table_2023_T13.xlsx"
+
+file_path <- "data/mp03/migration_2023.xlsx"
+
+if(!file.exists(file_path)) {
+  download.file(file_url, file_path, mode = "wb")
+}
+
+# State name with District of Columbia:
+
+states_with_dc <- c(state.name[1:8],
+                    "District of Columbia",
+                    state.name[9:50])
+
+# Read the first 6 columns for stationary flows
+
+stationary_flows <- read_excel(
+  file_path,
+  range = "A9:F100",
+  col_names = FALSE,
+  col_types = "text"
+) |>
+  select(
+    state_current = 1,
+    same_house = 4,
+    same_state = 6) |>
+  mutate(
+    state_current = str_squish(state_current),
+    same_house = as.integer(gsub(",", "", same_house)),
+    same_state = as.integer(gsub(",", "", same_state))
+  ) |>
+  filter(state_current %in% state.name) |>
+  mutate(
+    population = same_house + same_state) |>
+  transmute(
+    state_current,
+    state_1y = state_current,
+    population = as.integer(population),
+    year_current = 2023,
+    year_1y = 2022
+  )
+  
+# Read column J to DG for state_to_state moving flows
+moving_raw <- read_excel(
+  file_path,
+  range = "A9:DG100",
+  col_names = c(
+    "state_current",
+    rep(NA,8),
+    vctrs::vec_interleave(states_with_dc, NA)
+  ),
+  col_types = "text"
+  )|>
+  select(
+    state_current,
+         any_of(states_with_dc)
+    ) |>
+  mutate(
+    state_current = str_squish(state_current)
+  )
+
+moving_flows <- moving_raw |>
+  pivot_longer(
+    cols = all_of(states_with_dc),
+    names_to = "state_1y",
+    values_to = "population"
+  ) |>
+  filter(
+    state_current %in% state.name,
+    state_1y %in% state.name,
+    state_current != state_1y
+  ) |>
+  mutate(
+    population = as.integer(gsub(",", "", population))
+  ) |>
+  transmute(
+    state_current,
+    state_1y,
+    population,
+    year_current = 2023,
+    year_1y = 2022
+  )
+
+# Combine stationary flows and moving flows:
+migration_2023 <- bind_rows(
+  moving_flows,
+  stationary_flows
+)
+
+return(migration_2023)
+}
+```
+
+
+
+```{r}
+migration_2023 <- state_to_state_migration_2023()
+dim(migration_2023)
+```
+
+```{r}
+library(gt)
+
+migration_2023 |>
+  slice_head(n = 20) |>
+  gt() |>
+  tab_header(
+    title = "State-to-State Migration (2023)",
+    subtitle = "Moving + Stationary Population"
+  ) |>
+  fmt_number(columns = population, decimals = 0)
+```
+
+### Data Acquisition - Combined State-to-State Flows
+
+Check the dimensions of both dataframes.
+```{r}
+dim(migration_2024)
+dim(migration_2023)
+```
+
+Combine 2 functions
+```{r}
+state_to_state_migration <- function() {
+  migration_2024 <- state_to_state_migration_2024()
+  migration_2023 <- state_to_state_migration_2023()
+  
+  migration23_24 <- bind_rows(
+    migration_2024,
+    migration_2023)
+
+return(migration23_24)
+}
+```
+Check dimension
+```{r}
+migration23_24 <- state_to_state_migration()
+dim(migration23_24)
+```
+Check the number of lines for each year
+
+```{r}
+migration23_24 |>
+  count(year_current, year_1y)
+```
+View combined dataframe in table format
+
+```{r}
+migration23_24 |>
+  slice_head(n = 20) |>
+  gt() |>
+  tab_header(
+    title = "Combined State-to-State Migration Flows",
+    subtitle = "2023 and 2024"
+  )
+```
+
+### Data Acquisition - Metro-to-Metro Migration Flows
+
+```{r}
+# Load the necessary library
+library(jsonlite)
+
+# Add supportive functions:
+# Function to move the 1st row to the column name:
+move_row_to_colnames <- function(X, row = 1) {
+  X <- as.data.frame(X)
+  
+  Xrow <- X[row, ]
+  X <- X[-row, ]
+  
+  colnames(X) <- Xrow
+  
+  X |>
+    type_convert() |>
+    as_tibble()
+}
+
+# Function to pull the state name from the metro name:
+
+pull_state_from_metro <- function(metro_name) {
+  str_extract(
+    metro_name,
+    ".*, (\\S{2})[-[:alpha:]]* Metro Area",
+    group = 1
+  )
+}
+
+```
+
+```{r}
+# Function
+metro_to_metro_migration <- function() {
+  #Create folder:
+  dir.create("data/mp03", recursive = TRUE, showWarnings = FALSE)
+  
+  #Load the file using API URL
+  api_url  <- paste0(
+    "https://api.census.gov/data/2020/acs/flows?",
+    "get=MOVEDIN,MOVEDOUT,FULL1_NAME,FULL2_NAME",
+    "&for=metropolitan%20statistical%20area/micropolitan%20statistical%20area:*"
+  )
+  
+# Local file path
+file_path <- "data/mp03/metro_to_metro_migration_2020.json"
+
+# Download JSON if needed
+  if (!file.exists(file_path)) {
+    download.file(api_url, file_path, mode = "wb")
+  }
+  
+  # Read JSON
+  metro_raw <- jsonlite::fromJSON(file_path)
+  
+  # Move first row to column names
+  metro_clean <- move_row_to_colnames(metro_raw)
+  
+  # Clean final table
+  metro_flows <- metro_clean |>
+    select(
+      moved_in = MOVEDIN,
+      moved_out = MOVEDOUT,
+      metro_current = FULL1_NAME,
+      metro_1y = FULL2_NAME
+    ) |>
+    mutate(
+      moved_in = as.integer(moved_in),
+      moved_out = as.integer(moved_out),
+      metro_current_state = pull_state_from_metro(metro_current),
+      metro_1y_state = pull_state_from_metro(metro_1y)
+    )
+  
+  return(metro_flows)
+}
+```
+
+```{r}
+metro_flows <- metro_to_metro_migration()
+
+glimpse(metro_flows)
+```
+View the metro migration data in table form
+```{r}
+metro_flows |>
+  slice_head(n = 20) |>
+  gt() |>
+  tab_header(
+    title = "Metro-to-Metro Migration Flows",
+    subtitle = "2016–2020 ACS 5-Year"
+  )
+```
+
+
+# 2. EXPLORATORY DATA ANALYSIS
+
+### 2.1 States have had the highest net population growth rates over the past decade
+
+Use "pop_bystate" data at the beginning to find the answer
+
+```{r}
+glimpse(pop_bystate)
+```
+
+```{r}
+
+min_year <- min(pop_bystate$year)
+max_year <- max(pop_bystate$year)
+
+pop_growth <- pop_bystate |>
+  filter(year %in% c(min(year), max(year))) |>
+  group_by(state) |>
+  summarize(
+    start_pop = total_population[year == min_year],
+    end_pop = total_population[year == max_year],
+    population_growth = end_pop - start_pop,
+    growth_rate = population_growth / start_pop, .groups = "drop"
+  ) |>
+  arrange(desc(growth_rate))
+
+pop_growth |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = c(start_pop, end_pop,population_growth ),
+    decimals = 0,
+    sep_mark = ","
+  ) |>
+  fmt_percent(
+    columns = growth_rate,
+    decimals = 2
+  ) |>
+  tab_header(
+    title = "Top 10 States by Population Growth Rate",
+    subtitle = paste0(min_year, "–", max_year)
+  )
+```
+
+Idaho has the highest population growth over the past decade with 20.95%.
+
+### 2.2 If you meet someone who moved to New York State in the last year, what are the most likely states they moved from? 
+
+2024 ACS data is used for this tasks, as 2025 data is not available.
+
+```{r}
+glimpse(migration_2024)
+```
+
+```{r}
+last_year <- max(migration_2024$year_current)
+
+ny_in_states <- migration_2024|>
+  filter(
+    year_current == last_year,
+    state_current == "New York",
+    state_1y != "New York"
+    ) |>
+  arrange(desc(population))
+
+
+ny_in_states |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = population,
+    decimals = 0,
+    sep_mark = ","
+  ) |>
+  tab_header(
+    title = "Top 10 origin states for in-migration to New York",
+    subtitle = paste("Year:", last_year)
+  )
+  
+```
+So, New Jersey is the most common origin state for recent migrants to New York.
+
+### If one of your friends announces they are moving out of the state, where are they most likely to move?
+
+```{r}
+ny_out_states <- migration_2024 |>
+  filter(
+    year_current == last_year,
+    state_1y == "New York",
+    state_current != "New York"
+  ) |>
+  arrange(desc(population))
+
+ny_out_states |>
+  slice_head(n = 5) |>
+  gt() |>
+  fmt_number(
+    columns = population,
+    decimals = 0,
+    sep_mark = ","
+  ) |>
+  tab_header(
+    title = "Top 5 states that people move to from New York",
+    subtitle = paste("Year:", last_year)
+  )
+  
+```
+
+People who moved out of New York last year most likely moved to New Jersey.
+
+### 2.3 If you meet someone who moved to New York City in the last year, what are the most likely metro areas they moved from?
+
+```{r}
+glimpse(metro_flows)
+```
+
+
+```{r}
+nycity_in_metros <- metro_flows |>
+  filter(
+    metro_current == "New York-Newark-Jersey City, NY-NJ-PA Metro Area",
+    metro_1y != "New York-Newark-Jersey City, NY-NJ-PA Metro Area"
+  )|>
+  arrange(desc(moved_in))
+
+nycity_in_metros |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = c(moved_out, moved_in),
+    decimals = 0,
+    sep_mark = ","
+  ) |>
+  tab_header(
+    title = "Top 10 metro areas that people move from to New York City",
+    subtitle = "2016-2020 ACS Migration Flows"
+  )
+```
+
+The data does not isolate New York City metro area alone. At the metro area level, the majority of migrants New York City metro area last year came from Asia.
+
+###  If one of your friends announces they are moving out of the city, where are they most likely to move?
+
+```{r}
+nycity_out_metros <- metro_flows |>
+  filter(
+    metro_1y == "New York-Newark-Jersey City, NY-NJ-PA Metro Area",
+    metro_current != "New York-Newark-Jersey City, NY-NJ-PA Metro Area"
+  )|>
+  arrange(desc(moved_out))
+
+nycity_out_metros |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = c(moved_out, moved_in),
+    decimals = 0,
+    sep_mark = ","
+  ) |>
+  tab_header(
+    title = "Top 10 metro areas that people move out from New York City",
+    subtitle = "2016-2020 ACS Migration Flows"
+  )
+```
+According to the survey,	Philadelphia-Camden-Wilmington, PA-NJ-DE-MD Metro Area was the top destination for people moving out of New York.
+
+### 2.4 Which states have had the highest amounts of in-migration and out-migration? 
+
+```{r}
+in_migration <- migration_2024 |>
+  filter(
+    year_current == last_year,
+    state_current != state_1y
+  ) |>
+  group_by(state_current) |>
+  summarize(
+    in_migration = sum(population), .groups = "drop"
+  ) |>
+  rename(state = state_current) |>
+  arrange(desc(in_migration))
+
+in_migration |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = in_migration,
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top 10 States by In-Migration",
+    subtitle = paste("Year:", last_year)
+  )
+  
+
+```
+
+Florida received the most in-migrants of any state last year.
+
+```{r}
+out_migration <- migration_2024 |>
+  filter(
+    year_current == last_year,
+    state_current != state_1y
+  ) |>
+  group_by(state_1y) |>
+  summarize(
+    out_migration = sum(population), .groups = "drop"
+  ) |>
+  rename(state = state_1y) |>
+  arrange(desc(out_migration))
+
+out_migration |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = out_migration,
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top 10 States by Out-Migration",
+    subtitle = paste("Year:", last_year)
+  )
+  
+```
+California led all states in total out-migration last year.
+
+### Which states have had the highest amount of net migration?
+
+```{r}
+net_migration <- in_migration |>
+  full_join(out_migration, by = "state") |>
+  mutate(
+    net_migration = in_migration - out_migration
+  ) |>
+  arrange(desc(net_migration))
+
+net_migration |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = c(in_migration, out_migration, net_migration),
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top 10 States by Net Migration",
+    subtitle = paste("Year:", last_year)
+  )
+  
+```
+
+Texas had the highest net migration among all states.
+
+### 2.5 Which metro areas have had the highest amounts of total in-migration and out-migration? 
+```{r}
+glimpse(metro_flows)
+```
+
+```{r}
+in_metro_area <- metro_flows |>
+  filter(
+    metro_current != metro_1y,
+    
+  ) |>
+  group_by(metro_current) |>
+  summarize(
+    in_metro_area = sum(moved_in, na.rm = TRUE), .groups = "drop"
+  ) |>
+  rename(metro_area = metro_current) |>
+  arrange(desc(in_metro_area))
+
+in_metro_area |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = in_metro_area,
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top 10 Metro Areas by In-Migration",
+    subtitle = "2016-2020 ACS Migration Flows"
+  )
+  
+```
+
+New York-Newark-Jersey City, NY-NJ-PA Metro Area had the highest in-migration over the period between 2016 and 2020.
+
+```{r}
+out_metro_area <- metro_flows |>
+  filter(
+    metro_current != metro_1y
+  ) |>
+  group_by(metro_1y) |>
+  summarize(
+    out_metro_area = sum(moved_out, na.rm = TRUE), .groups = "drop"
+  ) |>
+  rename(metro_area = metro_1y) |>
+  arrange(desc(out_metro_area))
+
+out_metro_area |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = out_metro_area,
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top 10 Metro Areas by Out-Migration",
+    subtitle = "2016-2020 ACS Migration Flows"
+  )
+  
+```
+
+Los Angeles-Long Beach-Anaheim, CA Metro Area had the highest out-migration over the period between 2016 and 2020.
+
+### Which metro areas have had the highest amount of net migration?
+
+```{r}
+metro_net_migration <- in_metro_area |>
+  full_join(out_metro_area, by = "metro_area") |>
+  mutate(
+    metro_net_migration = in_metro_area - out_metro_area
+  ) |>
+  arrange(desc(metro_net_migration))
+
+metro_net_migration |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = c(in_metro_area, out_metro_area, metro_net_migration),
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top 10 Metro Areas by Net Migration",
+    subtitle = "2016-2020 ACS Migration Flows")
+  
+```
+New York-Newark-Jersey City, NY-NJ-PA Metro Area had the highest net migration between 2016 and 2020.
+
+### 2.6. Which states have the highest fraction of residents who lived there last year? 
+
+```{r}
+state_stationary<- migration_2024 |>
+  group_by(state_current) |>
+  summarize(
+    total_population = sum(population),
+    stayed_population = sum(population[state_current == state_1y]),
+    stayed_fraction = stayed_population / total_population,
+    .groups = "drop"
+  ) |>
+  arrange(desc(stayed_fraction))
+
+state_stationary |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = c(total_population, stayed_population),
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  fmt_percent(
+    columns = stayed_fraction,
+    decimals = 2
+  ) |>
+  tab_header(
+    title = "Top 10 States by Share of Residents Who Stayed",
+    subtitle = "Lowest Proportional In-Migration, 2024"
+  )
+```
+
+California had the highest proportion of residents who stayed in 2024.
+
+### 2.7 Which state has the highest fraction of its population growth attributable to net internal migration? 
+
+```{r}
+migration_impact <- pop_growth |>
+  left_join(net_migration, by = "state") |>
+  mutate(
+    migration_share = net_migration/population_growth
+  ) |>
+  filter(!is.na(migration_share), population_growth > 0) |>
+  arrange(desc(migration_share))
+
+migration_impact |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = c(start_pop, end_pop, population_growth, in_migration, out_migration, net_migration),
+    sep_mark = ","
+  ) |>
+  fmt_percent(
+    columns = c(growth_rate, migration_share),
+    decimals = 2
+  ) |>
+  tab_header(
+    title = "States Where Population Growth Is Driven by Migration",
+    subtitle = paste(min_year, "-", max_year)
+  )
+```
+
+Wyoming had the highest fraction of its population growth attributable to net migration.
+
+### 2.8 Which state had the highest amount of migration into your state? Of the people who moved out of your state, what was the most popular destination state?
+
+```{r}
+my_state <- "New Jersey"
+last_year <- max(migration_2024$year_current)
+
+migration_in_state <- migration_2024 |>
+  filter(
+    year_current == last_year,
+    state_current == my_state,
+    state_1y != my_state
+  ) |>
+  arrange(desc(population))
+
+migration_in_state |>
+  slice_head(n = 5) |>
+  gt() |>
+  fmt_number(
+    columns = population,
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top 5 States migrating into New Jersey",
+    subtitle = paste("Year", last_year)
+  )    
+```
+  New York sent the largest number of migrants to New Jersey last year.
+  
+### Of the people who moved out of New Jersey, what was the most popular destination state?  
+
+```{r}
+
+migration_out_state <- migration_2024 |>
+  filter(
+    year_current == last_year,
+    state_1y == my_state,
+    state_current != my_state
+  ) |>
+  arrange(desc(population))
+
+migration_out_state |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = population,
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top 10 States migrating from New Jersey",
+    subtitle = paste("Year", last_year)
+  )    
+```
+Pennsylvania was the top state for people moving out of New Jersey.
+
+### 2.9 Which metro area, not located in your state, has the highest amount of migration into your state’s largest metro?
+
+```{r}
+js_metro <- "New York-Newark-Jersey City, NY-NJ-PA Metro Area"
+
+jscity_flows <- metro_flows |>
+  filter(
+    metro_current == js_metro,
+    metro_1y != js_metro,
+    str_detect(metro_1y, "Metro Area"),
+    metro_1y_state != "NJ"
+  )
+```
+
+```{r}
+jscity_flows |>
+  arrange(desc(moved_in)) |>
+  slice_head(n = 5) |>
+  select(metro_1y, moved_in) |>
+  gt() |>
+  fmt_number(
+    columns = moved_in,
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top 5 Metro Areas Migrating into NYC-Jersey City Metro Area",
+    subtitle = "2016–2020 ACS Migration Flows"
+  )
+```
+Philadelphia-Camden-Wilmington, PA-NJ-DE-MD Metro Area had the highest migrants to New York-Newark-Jersey City, NY-NJ-PA Metro Area between 2016 and 2020.
+
+### To which metro area outside of your state do the most residents of your largest metro area move?
+
+```{r}
+
+jscity_flows |>
+  arrange(desc(moved_out)) |>
+  slice_head(n = 5) |>
+  select(metro_1y, moved_out) |>
+  gt() |>
+  fmt_number(
+    columns = moved_out,
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top 5 Metro Areas Receiving Migrants from NYC-Jersey City Metro Area",
+    subtitle = "2016–2020 ACS Migration Flows"
+  )
+```
+
+Philadelphia-Camden-Wilmington, PA-NJ-DE-MD Metro Area was the top metro area for people leaving New York-Newark-Jersey City, NY-NJ-PA Metro Area between 2016 and 2020.
+
+### 2.10 Are there any metro areas that have a particularly high connection to your state’s largest metro? 
+
+```{r}
+jscity_flows <- metro_flows |>
+  filter(
+    metro_current == js_metro,
+    metro_1y != js_metro,
+  )
+
+jscity_connection <- jscity_flows |>
+  mutate(
+    total_in = sum(moved_in, na.rm = TRUE),
+    share = moved_in / total_in
+  ) |>
+  arrange(desc(share))
+
+jscity_connection |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(columns = moved_in, sep_mark = ",") |>
+  fmt_percent(columns = share, decimals = 2) |>
+  tab_header(
+    title = "Metro Areas with Strong Migration Connections to NYC-Jersy City Metro Area",
+    subtitle = "Share of Total In-Migration (2016–2020)"
+  )
+```
+
+Philadelphia-Camden-Wilmington, PA-NJ-DE-MD Metro Area had a strong connection with New York-Newark-Jersey City, NY-NJ-PA Metro Area between 2016 and 2020.
+
+# 3. POPULATION PROJECTION
+
+### Congressional Apportionments forecast from the 2020 Census
+```{r}
+library(fs)
+library(tidyverse)
+library(gt)
+library(readxl)
+
+# CA has 52 districts, so if we put in a hard max of 100 we're safe
+MAX_DISTRICTS <- 100 
+# Fixed per Reapportionment Act of 1929
+N_DISTRICTS <- 435
+
+data_mp03 <- fs::path("data", "mp03")
+data_file <- fs::path(data_mp03, "apportionment-2020-tableA.xlsx")
+if(!fs::dir_exists(data_mp03)) fs::dir_create(data_mp03, recurse=TRUE)
+    
+if(!fs::file_exists(data_file)){
+    download.file("https://www2.census.gov/programs-surveys/decennial/2020/data/apportionment/apportionment-2020-tableA.xlsx", 
+                  destfile=data_file)
+}    
+
+data_file |> 
+    read_excel(skip=4) |> 
+    select(state=1, 
+           population=2) |> 
+    filter_out(state %in%  c("District of Columbia", "U.S. Total")) |> 
+    expand_grid(cd=seq(0, MAX_DISTRICTS)) |> 
+    mutate(hh_den = sqrt(cd * (cd+1)),
+           population=as.integer(population),
+           hh_weight = population / hh_den) |> 
+    slice_max(hh_weight, n=N_DISTRICTS) |> 
+    group_by(state) |> 
+    summarize(population = first(population), 
+              n_districts = n()) |> 
+    mutate(pop_per_district = population / n_districts) |> 
+    arrange(desc(n_districts), desc(population), state) |> 
+    gt(id="tbl_2020_apportionment",
+       rowname_col="state") |> 
+    cols_label(state=md("State"), 
+               population="Apportionment Population", 
+               n_districts="Number of Congressional Districts", 
+               pop_per_district="Approximate Population per District") |> 
+    fmt_integer(c(population, pop_per_district)) |> 
+    data_color(columns=pop_per_district, 
+               palette="PuOr") |>
+    grand_summary_rows(columns=c(population, n_districts), 
+                       fn=list("Total" ~ sum(.)), 
+                       fmt = ~ fmt_integer(.)) |> 
+    tab_header("Congressional Apportionments from the 2020 Census") |> 
+    tab_source_note(md("Apportionments computed using the 
+[Huntington-Hill Method](https://en.wikipedia.org/wiki/Huntington%E2%80%93Hill_method).
+Data from the US Census Bureau 
+[Reapportionment Table A](https://www2.census.gov/programs-surveys/decennial/2020/data/apportionment/apportionment-2020-tableA.xlsx)
+(Resident Population + Assigned Overseas Population).")) |> 
+    tab_footnote(
+        locations=cells_column_labels(pop_per_district),
+        "Colors indicate population per congressional representative, ranging from
+almost 1 million residents per representative (DE, purple) to just over 540 thousand 
+per representative (Montana, brown)."
+    )
+
+```
+
+### Estimate the number of congressional districts your state will have as of the 2030 redistricting cycle.
+
+Population forecast to 2030
+```{r}
+# Step 1: Keep state populations needed for 2023, 2024
+pop_for_model <- pop_bystate |>
+  filter(year %in% c(2023, 2024)) |>
+  select(
+    state,
+    year,
+    total_population
+  )
+
+# Step 2: Estimate net migration by state for 2024
+net_migration_2024 <- migration_2024 |>
+  filter(state_current != state_1y) |>
+  summarize(
+    in_migration = sum(population),
+    .by = state_current
+  ) |>
+  rename(state = state_current) |>
+  full_join(
+    migration_2024 |>
+      filter(state_current != state_1y) |>
+      summarize(
+        out_migration = sum(population),
+        .by = state_1y
+      ) |>
+      rename(state = state_1y),
+    by = "state"
+  ) |>
+  mutate(
+    net_migration_2024 = in_migration - out_migration
+  ) |>
+  select(state, net_migration_2024)
+
+# Step 3: Estimate net migration by state for 2023
+net_migration_2023 <- migration_2023 |>
+  filter(state_current != state_1y) |>
+  summarize(
+    in_migration = sum(population),
+    .by = state_current
+  ) |>
+  rename(state = state_current) |>
+  full_join(
+    migration_2023 |>
+      filter(state_current != state_1y) |>
+      summarize(
+        out_migration = sum(population),
+        .by = state_1y
+      ) |>
+      rename(state = state_1y),
+    by = "state"
+  ) |>
+  mutate(
+    net_migration_2023 = in_migration - out_migration
+  ) |>
+  select(state, net_migration_2023)
+
+# Step 4: Forecast 2030 population
+population_forecast_2030 <- pop_for_model |>
+  pivot_wider(
+    names_from = year,
+    values_from = total_population,
+    names_prefix = "pop_"
+  ) |>
+  filter(state %in% state.name) |>
+  left_join(net_migration_2023, by = "state") |>
+  left_join(net_migration_2024, by = "state") |>
+  mutate(
+    net_migration_avg = (net_migration_2023 + net_migration_2024) / 2,
+    annual_growth_rate = (pop_2024 / pop_2023) - 1,
+    population_2030 = pop_2024 * (1 + annual_growth_rate)^6
+  ) |>
+  select(
+    state,
+    population_2030
+  )
+```
+
+Estimate 2030 congressional seats with the Huntington–Hill method
+
+```{r}
+MAX_DISTRICTS <- 100
+N_DISTRICTS <- 435
+
+apportionment_2030 <- population_forecast_2030 |>
+  filter(state %in% state.name) |>
+  rename(population = population_2030) |>
+  mutate(
+    population = as.numeric(gsub(",", "", population))
+  ) |>
+  expand_grid(cd = seq(0, MAX_DISTRICTS)) |>
+  mutate(
+    hh_den = sqrt(cd * (cd + 1)),
+    hh_weight = population / hh_den
+  ) |>
+  slice_max(hh_weight, n = N_DISTRICTS) |>
+  group_by(state) |>
+  summarize(
+    population = first(population),
+    n_districts_2030 = n(),
+    .groups = "drop"
+  ) |>
+  arrange(desc(n_districts_2030), desc(population))
+```
+
+Filter New Jersey
+```{r}
+apportionment_2030 |>
+  filter(state == "New Jersey") |>
+  gt() |>
+  fmt_number(columns = population, sep_mark = ",", decimals = 0) |>
+  tab_header(
+    title = "Estimated 2030 Congressional Apportionment in New Jersey",
+    subtitle = "Based on Forecasted Population"
+  )
+```
+# 4. Developing an Advertising Strategy to Induce Internal Migration and Increase State Political Power
+
+Goal: New Jersey to gain one additional congressional seat in the 2032 apportionment (based on the 2030 Census).
+
+As of 2020, New Jersey has 12 congressional seats. Based on 2030 census forecast, New Jersey is projected to have 13 seats with a population at  roughly 10.86 million.
+
+Competing states
+
+```{r}
+# Get NJ row
+nj_row <- apportionment_2030 |>
+  filter(state == "New Jersey")
+
+# Find competing states
+competing_states <- apportionment_2030 |>
+  filter(
+    abs(n_districts_2030 - nj_row$n_districts_2030) <= 1,
+    state != "New Jersey"
+  ) |>
+  arrange(desc(n_districts_2030), desc(population))
+
+competing_states|>
+  gt() |>
+  fmt_number(
+    columns = population,
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "States competing with New Jersey for Congressional seats",
+    subtitle = "Projected apportionment based on the 2030 census"
+  )
+  
+```
+
+These states are within one seat of New Jersey and therefore represent its primary competitors in the apportionment process.
+
+Based on 2020 figures, comparing with 2030 forecast, NJ is expected to increate around 1.57 million residents.
+```{r}
+nj_2020 <- 9294493  # from the 2020 Census
+
+nj_2030 <- population_forecast_2030 |>
+  filter(state == "New Jersey") |>
+  pull(population_2030)
+
+nj_growth <- nj_2030 - nj_2020
+nj_growth
+```
+Based on 2020 Census figures and the 2030 population forecast, New Jersey is expected to increase by approximately 1.57 million residents.
+
+Net migration between other states and New Jersey.
+```{r}
+in_state <- migration_in_state |>
+  group_by(state_1y) |>
+  summarize(
+    inflow = sum(population),
+    .groups = "drop"
+  )
+
+out_state <- migration_out_state |>
+  group_by(state_current) |>
+  summarize(
+    outflow = sum(population),
+    .groups = "drop"
+  ) |>
+  rename(state_1y = state_current)
+
+net_migration_state <- in_state |>
+  full_join(out_state, by = "state_1y") |>
+  mutate(
+    inflow = replace_na(inflow, 0),
+    outflow = replace_na(outflow, 0),
+    net_migration = inflow - outflow
+  ) |>
+  arrange(desc(net_migration))
+```
+
+Top 10 states contributing the most migrants to New Jersey. New York state is the biggest source of migration.
+```{r}
+net_migration_state |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = c(inflow, outflow, net_migration),
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Net Migration Between New Jersey and Other States",
+    subtitle = paste("Year:", last_year)
+  )
+```
+
+
+Top 10 states took the most migrants to New Jersey. Majority of people left New Jersey to Florida and Texas.
+
+
+```{r}
+net_migration_state |>
+  arrange(net_migration) |>
+  slice_head(n = 10) |>
+  gt() |>
+  fmt_number(
+    columns = c(inflow, outflow, net_migration),
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top 10 States with Net Migration Loss from New Jersey",
+    subtitle = paste("Year:", last_year)
+  )
+```
+
+
+
+Net migration by metro areas
+
+```{r}
+js_metro <- "New York-Newark-Jersey City, NY-NJ-PA Metro Area"
+
+jscity_flows <- metro_flows |>
+  filter(
+    metro_current == js_metro,
+    metro_1y != js_metro,
+    metro_1y_state != "NJ"
+  ) |>
+  mutate(
+    net_migration = moved_in - moved_out
+  )
+```
+
+Top net gains by metro areas:
+```{r}
+jscity_flows |>
+  arrange(desc(net_migration)) |>
+  slice_head(n = 10) |>
+  select(metro_1y, moved_in, moved_out, net_migration) |>
+  gt() |>
+  fmt_number(
+    columns = c(moved_in, moved_out, net_migration),
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top Metro Areas with Net Gain to NYC-Jersey City",
+    subtitle = "2016–2020 ACS Migration Flows"
+  )
+```
+
+Top net loss by metro areas:
+
+```{r}
+jscity_flows |>
+  arrange(net_migration) |>
+  slice_head(n = 10) |>
+  select(metro_1y, moved_in, moved_out, net_migration) |>
+  gt() |>
+  fmt_number(
+    columns = c(moved_in, moved_out, net_migration),
+    sep_mark = ",",
+    decimals = 0
+  ) |>
+  tab_header(
+    title = "Top Metro Areas with Net Loss from NYC-Jersey City",
+    subtitle = "2016–2020 ACS Migration Flows"
+  )
+```
+
+### Proposal
+
+The main goal of this strategy is to help New Jersey gain one more congressional seat after the 2030 Census. Based on the analysis above, the state is expected to grow by about 1.57 million people from 2020 to 2030. But just growing is not enough, what really matters is how New Jersey grows compared to other states. To make this work, we need to focus on bringing more people in while also reducing the number of people leaving.
+
+A big opportunity comes from New York, which is by far the largest source of people moving into New Jersey. In 2024 alone, New Jersey gained about 20,000 more people from New York than it lost, which is much higher than any other state. This shows there is already a strong connection, especially with people living in NYC, and we should lean into that. The idea is to show New Yorkers that they can have a better lifestyle in New Jersey—more space, less crowding, and easier driving while still keeping access to NYC jobs, healthcare, and everything the metro area offers. Since many of these residents use public transportation every day, placing ads in subways and transit hubs would be very effective.
+Slogan: “New York on the West Side.”
+
+At the same time, New Jersey is losing a lot of people to Florida, with over 10,000 net residents leaving in 2024. It’s difficult to compete with Florida on taxes, but New Jersey has an advantage when it comes to job opportunities, especially outside Florida’s major cities like Miami and Tampa. Many smaller cities in Florida offer fewer career options, which gives us a chance to bring people back. We can target these areas with ads in gas stations and highway stops, where people are more likely to notice them. The message should highlight that New Jersey offers a similar spacious, driving-friendly lifestyle, but with stronger job prospects and more variety in seasons and activities.
+Slogan: “Same Space. More Opportunity. Four Seasons to Enjoy.”
+
+We should also look at states like Michigan, which are expected to keep the same number of seats. This means even small population changes could make a difference. New Jersey can attract people from Michigan by highlighting its strong job market, higher income potential, and proximity to major cities like NYC and Philadelphia. It also offers lifestyle benefits such as coastal access and more diverse communities.
+Slogan: “Closer to Opportunity. Connected to Everything.”
+
+In summary, even though New Jersey is already growing, gaining another congressional seat will depend on making smart, targeted migration decisions. By focusing on strong inflow areas like New York, reducing losses to Florida, and competing with states like Michigan, New Jersey can realistically achieve the additional population needed by 2030 to secure one more congressional seat.
+
+# 5. AI Usage Statement
+
+::: {.callout-note title="AI Usage Statement" collapse="true"}
+
+ChatGPT was used to help write the code in this project, but all non-code text was generated without the use of any Generative AI tools. Additionally, ChatGPT was used to provide additional background information on the topic and to brainstorm ideas for the final open-ended prompt.
+
+:::

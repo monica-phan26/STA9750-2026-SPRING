@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Water Quality Prediction: Benchmark Notebook – STA 9750 Submission Material</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-9715d1ea54bebc13d79b5e616bf9254d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="nav-fixed fullcontent quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">STA 9750 Submission Material</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools tools-end">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Water Quality Prediction: Benchmark Notebook</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="challenge-overview" class="level2">
+<h2 class="anchored" data-anchor-id="challenge-overview">Challenge Overview</h2>
+<p align="justify">
+Welcome to the EY AI &amp; Data Challenge 2026!<br>
+The objective of this challenge is to build a robust <strong> machine learning model </strong>capable of predicting water quality across various river locations in South Africa. In addition to accurate predictions, the model should also identify and emphasize the key factors that significantly influence water quality.
+</p>
+<p align="justify">
+Participants will be provided with a dataset containing three water quality parameters <strong>Total Alkalinity</strong>, <strong>Electrical Conductance</strong>, and <strong>Dissolved Reactive Phosphorus</strong> collected between 2011 and 2015 from approximately 200 river locations across South Africa. Each data point includes the geographic coordinates (latitude and longitude) of the sampling site, the date of collection, and the corresponding water quality measurements.
+</p>
+<p align="justify">
+Using this dataset, participants are expected to build a machine learning model to predict water quality parameters for a separate validation dataset, which includes locations from different regions not present in the training data. The challenge also encourages participants to explore feature importance and provide insights into the factors most strongly associated with variations in water quality.
+</p>
+<p align="justify">
+This challenge is designed for participants with varying levels of experience in data science, remote sensing, and environmental analytics. It offers a valuable opportunity to apply machine learning techniques to real-world environmental data and contribute to advancing water quality monitoring using artificial intelligence.
+</p>
+<b>About the Notebook: </b>
+<p align="justify">
+</p><p>
+</p><p align="justify">
+In this notebook, we demonstrate a basic workflow that serves as a foundation for the challenge. The model has been developed to predict <b>water quality parameters</b> using features derived from the <b>Landsat</b> and <b>TerraClimate</b> datasets. Specifically, four spectral bands—<b>SWIR22</b> (Shortwave Infrared 2), <b>NIR</b> (Near Infrared), <b>Green</b>, and <b>SWIR16</b> (Shortwave Infrared 1)—were utilized from Landsat, along with derived spectral indices such as <b>NDMI</b> (Normalized Difference Moisture Index) and <b>MNDWI</b> (Modified Normalized Difference Water Index). In addition, the <b>PET</b> (Potential Evapotranspiration) variable was incorporated from the <b>TerraClimate</b> dataset to account for climatic influences on water quality.
+</p>
+<p align="justify">
+</p><p>The dataset spans a five-year period from <b>2011 to 2015</b>. Using <b>API-based data extraction</b> methods, both Landsat and TerraClimate features were retrieved directly from the <a href="https://planetarycomputer.microsoft.com/">Microsoft Planetary Computer</a> portal. These combined spectral, index-based, and climatic features were used as predictors in a regression model to estimate three key water quality parameters: <b>Total Alkalinity (TA)</b>, <b>Electrical Conductance (EC)</b>, and <b>Dissolved Reactive Phosphorus (DRP)</b>.</p>
+<p></p>
+<p align="justify">
+Please note that this notebook serves only as a starting point. Several assumptions were made during the data extraction and model development process, which you may find opportunities to improve upon. Participants are encouraged to explore additional features, enhance preprocessing techniques, or experiment with different regression algorithms to optimize predictive performance.
+</p>
+</section>
+<section id="load-in-dependencies" class="level2">
+<h2 class="anchored" data-anchor-id="load-in-dependencies">Load In Dependencies</h2>
+<p>To run this demonstration notebook, you will need to have the following packages imported below installed. This may take some time.</p>
+<div id="b53ef74f-52ba-4c63-b412-2f4432408d04" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Suppress warnings</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> warnings</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>warnings.filterwarnings(<span class="st">'ignore'</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualization libraries</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Data manipulation and analysis</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Multi-dimensional arrays and datasets (e.g., NetCDF, Zarr)</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> xarray <span class="im">as</span> xr</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Geospatial raster data handling with CRS support</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rioxarray <span class="im">as</span> rxr</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Raster operations and spatial windowing</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> rasterio.windows <span class="im">import</span> Window</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Feature preprocessing and data splitting</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.spatial <span class="im">import</span> cKDTree</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Machine Learning</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestRegressor</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> r2_score</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Planetary Computer tools for STAC API access and authentication</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pystac_client</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> planetary_computer <span class="im">as</span> pc</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> odc.stac <span class="im">import</span> stac_load</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pystac.extensions.eo <span class="im">import</span> EOExtension <span class="im">as</span> eo</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> date</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tqdm <span class="im">import</span> tqdm</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="response-variable" class="level2">
+<h2 class="anchored" data-anchor-id="response-variable">Response Variable</h2>
+<p align="justify">
+Before building the model, we first load the <b>water quality training dataset</b>. The curated dataset contains samples collected from various monitoring stations across the study region. Each record includes the geographical coordinates (Latitude and Longitude), the sample collection date, and the corresponding <b>measured values</b> for the three key water quality parameters — <b>Total Alkalinity (TA)</b>, <b>Electrical Conductance (EC)</b>, and <b>Dissolved Reactive Phosphorus (DRP)</b>.
+</p>
+<div id="78281644-14cb-4923-aa67-188808db80ef" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>Water_Quality_df<span class="op">=</span>pd.read_csv(<span class="st">'water_quality_training_dataset.csv'</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Water_Quality_df.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Latitude</th>
+<th data-quarto-table-cell-role="th">Longitude</th>
+<th data-quarto-table-cell-role="th">Sample Date</th>
+<th data-quarto-table-cell-role="th">Total Alkalinity</th>
+<th data-quarto-table-cell-role="th">Electrical Conductance</th>
+<th data-quarto-table-cell-role="th">Dissolved Reactive Phosphorus</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>-28.760833</td>
+<td>17.730278</td>
+<td>02-01-2011</td>
+<td>128.912</td>
+<td>555.0</td>
+<td>10.0</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>-26.861111</td>
+<td>28.884722</td>
+<td>03-01-2011</td>
+<td>74.720</td>
+<td>162.9</td>
+<td>163.0</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>-26.450000</td>
+<td>28.085833</td>
+<td>03-01-2011</td>
+<td>89.254</td>
+<td>573.0</td>
+<td>80.0</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>-27.671111</td>
+<td>27.236944</td>
+<td>03-01-2011</td>
+<td>82.000</td>
+<td>203.6</td>
+<td>101.0</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>-27.356667</td>
+<td>27.286389</td>
+<td>03-01-2011</td>
+<td>56.100</td>
+<td>145.1</td>
+<td>151.0</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="predictor-variables" class="level2">
+<h2 class="anchored" data-anchor-id="predictor-variables">Predictor Variables</h2>
+<p align="justify">
+Now that we have our water quality dataset, the next step is to gather the predictor variables from the <b>Landsat</b> and <b>TerraClimate</b> datasets. In this notebook, we demonstrate how to <b>load previously extracted satellite and climate data</b> from separate files, rather than performing the extraction directly, which allows for a smoother and faster experience. Participants can refer to the dedicated extraction notebooks—one for Landsat and another for TerraClimate—to understand how the data was retrieved and processed, and they can also generate their own output CSV files if needed. Using these pre-extracted CSV files, this notebook focuses on loading the predictor features and running the subsequent analysis and model training efficiently.
+</p>
+<p align="justify">
+For more detailed guidance on the original data extraction process, you can review the <a href="https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2#Example-Notebook">Landsat example notebook</a> and the <a href="https://planetarycomputer.microsoft.com/dataset/terraclimate#Example-Notebook">TerraClimate example notebook</a> available on the Planetary Computer portal.
+</p>
+<p align="justify">
+We have used selected spectral bands — SWIR22 (Shortwave Infrared 2), NIR (Near Infrared), Green, and SWIR16 (Shortwave Infrared 1) — and computed key spectral indices such as NDMI (Normalized Difference Moisture Index) and MNDWI (Modified Normalized Difference Water Index). These features capture surface moisture, vegetation, and water content characteristics that influence water quality variability.
+</p>
+<p align="justify">
+In addition to Landsat features, we also incorporated the <b>Potential Evapotranspiration (PET)</b> variable from the <b>TerraClimate</b> dataset, which provides high-resolution global climate data. The PET feature captures the atmospheric demand for moisture, representing climatic conditions such as temperature, humidity, and radiation that influence surface water evaporation and thus affect water quality parameters.
+</p>
+<ul>
+<li>
+SWIR22 – Sensitive to surface moisture and turbidity variations in water bodies.
+</li>
+<li>
+NIR – Helps in identifying vegetation and suspended matter in water.
+</li>
+<li>
+Green – Useful for detecting water color and surface reflectance changes.
+</li>
+<li>
+SWIR16 – Provides information on surface dryness and sediment concentration.
+</li>
+<li>
+NDMI – Derived from NIR and SWIR16, indicates moisture and vegetation-water interaction.
+</li>
+<li>
+MNDWI – Derived from Green and SWIR22, effective for distinguishing open water areas and reducing built-up noise.
+</li>
+<li>
+PET – Extracted from the TerraClimate dataset, represents the potential evapotranspiration that influences hydrological and water quality dynamics.
+</li>
+</ul>
+<h4 style="color:rgb(255, 0, 0)" class="anchored">
+<strong>Tip 1</strong>
+</h4>
+<p align="justify">
+Participants are encouraged to experiment with different combinations of <b>Landsat</b> bands or even include data from other public satellite data sources. By creating mathematical combinations of bands, you can derive various spectral indices that capture surface and environmental characteristics.
+</p>
+<h3 class="anchored">
+Loading Pre-Extracted Landsat Data
+</h3>
+<p align="justify">
+In this notebook, we <b>load previously extracted Landsat data</b> from CSV files generated in a separate extraction notebook. This approach ensures a smoother and faster workflow, allowing participants to focus on data analysis and model development without waiting for time-consuming data retrieval.
+</p>
+<p align="justify">
+Participants are expected to generate their own data extraction CSV files by running the dedicated Landsat extraction notebook. These CSV files can then be used here to smoothly run this benchmark notebook. Participants can refer to the extraction notebook to understand the API-based process, including how individual bands and indices like <b>NDMI</b> were computed. Using these pre-extracted CSV files simplifies preprocessing and is ideal for large-scale environmental and water quality analysis.
+</p>
+<h4 style="color:rgb(255, 0, 0)" class="anchored">
+<strong>Tip 2</strong>
+</h4>
+<p>In the data extraction process (performed in the dedicated extraction notebooks), a 100 m focal buffer was applied around each sampling location rather than using a single point. Participants may explore creating different focal buffers around the locations (e.g., 50 m, 150 m, etc.) during extraction. For example, if a 50 m buffer was used for “Band 2”, the extracted CSV values would reflect the average of “Band 2” within 50 meters of each location. This approach can help reduce errors associated with spatial autocorrelation.</p>
+<div id="2088358c-8963-4078-9b39-f85bdc0697ee" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>landsat_train_features <span class="op">=</span> pd.read_csv(<span class="st">'landsat_features_training.csv'</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>landsat_train_features.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Latitude</th>
+<th data-quarto-table-cell-role="th">Longitude</th>
+<th data-quarto-table-cell-role="th">Sample Date</th>
+<th data-quarto-table-cell-role="th">nir</th>
+<th data-quarto-table-cell-role="th">green</th>
+<th data-quarto-table-cell-role="th">swir16</th>
+<th data-quarto-table-cell-role="th">swir22</th>
+<th data-quarto-table-cell-role="th">NDMI</th>
+<th data-quarto-table-cell-role="th">MNDWI</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>-28.760833</td>
+<td>17.730278</td>
+<td>02-01-2011</td>
+<td>11190.0</td>
+<td>11426.0</td>
+<td>7687.5</td>
+<td>7645.0</td>
+<td>0.185538</td>
+<td>0.195595</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>-26.861111</td>
+<td>28.884722</td>
+<td>03-01-2011</td>
+<td>17658.5</td>
+<td>9550.0</td>
+<td>13746.5</td>
+<td>10574.0</td>
+<td>0.124566</td>
+<td>-0.180134</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>-26.450000</td>
+<td>28.085833</td>
+<td>03-01-2011</td>
+<td>15210.0</td>
+<td>10720.0</td>
+<td>17974.0</td>
+<td>14201.0</td>
+<td>-0.083293</td>
+<td>-0.252805</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>-27.671111</td>
+<td>27.236944</td>
+<td>03-01-2011</td>
+<td>14887.0</td>
+<td>10943.0</td>
+<td>13522.0</td>
+<td>11403.0</td>
+<td>0.048048</td>
+<td>-0.105416</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>-27.356667</td>
+<td>27.286389</td>
+<td>03-01-2011</td>
+<td>16828.5</td>
+<td>9502.5</td>
+<td>12665.5</td>
+<td>9643.0</td>
+<td>0.141147</td>
+<td>-0.142683</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<h3 class="anchored">
+Loading Pre-Extracted TerraClimate Data
+</h3>
+<p align="justify">
+In this notebook, we <b>load previously extracted TerraClimate data</b> from CSV files generated in a dedicated extraction notebook. This approach ensures a smoother and faster workflow, allowing participants to focus on data analysis and model development without waiting for time-consuming data retrieval.
+</p>
+<p align="justify">
+Participants are expected to generate their own data extraction CSV files by running the dedicated TerraClimate extraction notebook. These CSV files can then be used here to smoothly run this benchmark notebook. Participants can refer to the extraction notebook to understand the API-based process, including how climate variables such as <b>Potential Evapotranspiration (PET)</b> were extracted. Using these pre-extracted CSV files ensures consistent, automated retrieval of high-resolution climate data that can be easily integrated with satellite-derived features for comprehensive environmental and hydrological analysis.
+</p>
+<div id="aa4f27bf-96e0-47b3-b217-c4532ebce51e" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Terraclimate_df <span class="op">=</span> pd.read_csv(<span class="st">'terraclimate_features_training.csv'</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>Terraclimate_df.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Latitude</th>
+<th data-quarto-table-cell-role="th">Longitude</th>
+<th data-quarto-table-cell-role="th">Sample Date</th>
+<th data-quarto-table-cell-role="th">pet</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>-28.760833</td>
+<td>17.730278</td>
+<td>02-01-2011</td>
+<td>174.2</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>-26.861111</td>
+<td>28.884722</td>
+<td>03-01-2011</td>
+<td>124.1</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>-26.450000</td>
+<td>28.085833</td>
+<td>03-01-2011</td>
+<td>127.5</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>-27.671111</td>
+<td>27.236944</td>
+<td>03-01-2011</td>
+<td>129.7</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>-27.356667</td>
+<td>27.286389</td>
+<td>03-01-2011</td>
+<td>129.2</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="joining-the-predictor-variables-and-response-variables" class="level2">
+<h2 class="anchored" data-anchor-id="joining-the-predictor-variables-and-response-variables">Joining the predictor variables and response variables</h2>
+<p>Now that we have extracted our predictor variables, we need to join them onto the response variable . We use the function <i><b>combine_two_datasets</b></i> to combine the predictor variables and response variables.The <i><b>concat</b></i> function from pandas comes in handy here.</p>
+<div id="7b42801e-e7b9-4b17-b4e4-f65fd971decc" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine two datasets vertically (along columns) using pandas concat function.</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> combine_two_datasets(dataset1,dataset2,dataset3):</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">'''</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns a  vertically concatenated dataset.</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">    Attributes:</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">    dataset1 - Dataset 1 to be combined </span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">    dataset2 - Dataset 2 to be combined</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">    '''</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> pd.concat([dataset1,dataset2,dataset3], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> data.loc[:, <span class="op">~</span>data.columns.duplicated()]</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> data</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="c75dffde-a8e3-4a6e-bbab-bf0d8aac7bfe" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Combining ground data and final data into a single dataset.</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>wq_data <span class="op">=</span> combine_two_datasets(Water_Quality_df, landsat_train_features, Terraclimate_df)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>wq_data.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Latitude</th>
+<th data-quarto-table-cell-role="th">Longitude</th>
+<th data-quarto-table-cell-role="th">Sample Date</th>
+<th data-quarto-table-cell-role="th">Total Alkalinity</th>
+<th data-quarto-table-cell-role="th">Electrical Conductance</th>
+<th data-quarto-table-cell-role="th">Dissolved Reactive Phosphorus</th>
+<th data-quarto-table-cell-role="th">nir</th>
+<th data-quarto-table-cell-role="th">green</th>
+<th data-quarto-table-cell-role="th">swir16</th>
+<th data-quarto-table-cell-role="th">swir22</th>
+<th data-quarto-table-cell-role="th">NDMI</th>
+<th data-quarto-table-cell-role="th">MNDWI</th>
+<th data-quarto-table-cell-role="th">pet</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>-28.760833</td>
+<td>17.730278</td>
+<td>02-01-2011</td>
+<td>128.912</td>
+<td>555.0</td>
+<td>10.0</td>
+<td>11190.0</td>
+<td>11426.0</td>
+<td>7687.5</td>
+<td>7645.0</td>
+<td>0.185538</td>
+<td>0.195595</td>
+<td>174.2</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>-26.861111</td>
+<td>28.884722</td>
+<td>03-01-2011</td>
+<td>74.720</td>
+<td>162.9</td>
+<td>163.0</td>
+<td>17658.5</td>
+<td>9550.0</td>
+<td>13746.5</td>
+<td>10574.0</td>
+<td>0.124566</td>
+<td>-0.180134</td>
+<td>124.1</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>-26.450000</td>
+<td>28.085833</td>
+<td>03-01-2011</td>
+<td>89.254</td>
+<td>573.0</td>
+<td>80.0</td>
+<td>15210.0</td>
+<td>10720.0</td>
+<td>17974.0</td>
+<td>14201.0</td>
+<td>-0.083293</td>
+<td>-0.252805</td>
+<td>127.5</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>-27.671111</td>
+<td>27.236944</td>
+<td>03-01-2011</td>
+<td>82.000</td>
+<td>203.6</td>
+<td>101.0</td>
+<td>14887.0</td>
+<td>10943.0</td>
+<td>13522.0</td>
+<td>11403.0</td>
+<td>0.048048</td>
+<td>-0.105416</td>
+<td>129.7</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>-27.356667</td>
+<td>27.286389</td>
+<td>03-01-2011</td>
+<td>56.100</td>
+<td>145.1</td>
+<td>151.0</td>
+<td>16828.5</td>
+<td>9502.5</td>
+<td>12665.5</td>
+<td>9643.0</td>
+<td>0.141147</td>
+<td>-0.142683</td>
+<td>129.2</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<h3 class="anchored">
+Handling Missing Values
+</h3>
+<p align="justify">
+Before model training, missing values in the dataset were carefully handled to ensure data consistency and prevent model bias. Numerical columns were imputed using their median values, maintaining the overall data distribution while minimizing the impact of outliers.
+</p>
+<div id="de7372e4-26c6-4bd8-9d7a-39bc35b01a14" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>wq_data <span class="op">=</span> wq_data.fillna(wq_data.median(numeric_only<span class="op">=</span><span class="va">True</span>))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>wq_data.isna().<span class="bu">sum</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>Latitude                         0
+Longitude                        0
+Sample Date                      0
+Total Alkalinity                 0
+Electrical Conductance           0
+Dissolved Reactive Phosphorus    0
+nir                              0
+green                            0
+swir16                           0
+swir22                           0
+NDMI                             0
+MNDWI                            0
+pet                              0
+dtype: int64</code></pre>
+</div>
+</div>
+</section>
+<section id="model-building" class="level2">
+<h2 class="anchored" data-anchor-id="model-building">Model Building</h2>
+<p align="justify">
+Now let us select the columns required for our model building exercise. We will consider only Band swir22, NDMI and MNDWI from the Landsat data and pet from Terraclimate dataset as our predictor variables. It does not make sense to use latitude and longitude as predictor variables, as they do not have any direct impact on predicting the water quality parameters.
+</p>
+<div id="35381365-adf1-4702-a99d-5cec95812ff9" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Retaining only the columns for swir22, NDMI, MNDWI, pet, Total Alkalinity, Electrical Conductance and Dissolved Reactive Phosphorus Index in the dataset.</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>wq_data <span class="op">=</span> wq_data[[<span class="st">'swir22'</span>,<span class="st">'NDMI'</span>,<span class="st">'MNDWI'</span>,<span class="st">'pet'</span>, <span class="st">'Total Alkalinity'</span>, <span class="st">'Electrical Conductance'</span>, <span class="st">'Dissolved Reactive Phosphorus'</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<h4 style="color:rgb(255, 0, 0)" class="anchored">
+<strong>Tip 3</strong>
+</h4>
+<p align="justify">
+We are developing individual models for each water quality parameter using a common set of features: SWIR22, NDMI, MNDWI, and PET. However, participants are encouraged to experiment with different feature combinations to build more robust machine learning models.
+</p>
+</section>
+<section id="helper-functions" class="level2">
+<h2 class="anchored" data-anchor-id="helper-functions">Helper Functions</h2>
+<section id="train-and-test-split" class="level3">
+<h3 class="anchored" data-anchor-id="train-and-test-split">Train and Test Split</h3>
+<p align="justify">
+We will now split the data into 70% training data and 30% test data. Scikit-learn alias “sklearn” is a robust library for machine learning in Python. The scikit-learn library has a <i><b>model_selection</b></i> module in which there is a splitting function <i><b>train_test_split</b></i>. You can use the same.
+</p>
+</section>
+<section id="feature-scaling" class="level3">
+<h3 class="anchored" data-anchor-id="feature-scaling">Feature Scaling</h3>
+<p align="justify">
+Before initiating the model training we may have to execute different data pre-processing steps. Here we are demonstrating the scaling of ‘swir22’,‘NDMI’,‘MNDWI’,‘pet’ variable by using Standard Scaler.
+</p>
+<p align="justify">
+Feature Scaling is a data preprocessing step for numerical features. Many machine learning algorithms like Gradient descent methods, KNN algorithm, linear and logistic regression, etc. require data scaling to produce good results. Scikit learn provides functions that can be used to apply data scaling. Here we are using Standard Scaler. The idea behind Standard Scaler is that it will transform your data such that its distribution will have a mean value 0 and standard deviation of 1.
+</p>
+</section>
+<section id="model-training" class="level3">
+<h3 class="anchored" data-anchor-id="model-training">Model Training</h3>
+<p align="justify">
+Now that we have the data in a format suitable for machine learning, we can begin training our models. In this demonstration notebook, we will build three separate regression models — one for each target water quality parameter: Total Alkalinity, Electrical Conductance, and Dissolved Reactive Phosphorus. Each model will be trained independently to capture the unique relationships between the satellite-derived features and each parameter.
+</p>
+<p align="justify">
+We will use the Random Forest Regressor from the scikit-learn library to build our models. Scikit-learn provides a wide range of regression algorithms with extensive parameter tuning and customization capabilities.
+</p>
+<p align="justify">
+For model training, the predictor variables (e.g., SWIR22, NDMI, MNDWI, and pet) will be stored in an array X, and the response variable (one of the three water quality parameters) will be stored in an array Y. It is important not to include the response variable in X. Additionally, since latitude, longitude, and sample date are only used for spatial and temporal reference, they will be excluded from the predictor variables during model training.
+</p>
+</section>
+<section id="model-evaluation" class="level3">
+<h3 class="anchored">Model Evaluation</h3>
+<p align="justify">
+Now that we have trained our models for the three water quality parameters, the next step is to evaluate their performance. Each regression model for Total Alkalinity, Electrical Conductance, and Dissolved Reactive Phosphorus is assessed using the R² score and the Root Mean Square Error (RMSE). The R² score measures how well the model explains the variance in the observed values, while RMSE quantifies the average magnitude of prediction errors. Together, these metrics help determine how effectively each model captures variations in water quality across different locations and sampling dates. Scikit-learn provides built-in functions to compute these metrics, and participants may explore additional evaluation methods or custom metrics as needed.
+</p>
+<h4 style="color:rgb(255, 0, 0)" class="anchored">
+<strong>Tip 4</strong>
+</h4>
+<p align="justify">
+There are many data preprocessing methods available, which might help to improve the model performance. Participants should explore various suitable preprocessing methods as well as different machine learning algorithms to build a robust model.
+</p>
+<div id="c7e68f6e-1679-467f-803c-e819d654bbab" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> split_data(X, y, test_size<span class="op">=</span><span class="fl">0.3</span>, random_state<span class="op">=</span><span class="dv">42</span>):</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> train_test_split(X, y, test_size<span class="op">=</span>test_size, random_state<span class="op">=</span>random_state)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> scale_data(X_train, X_test):</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    scaler <span class="op">=</span> StandardScaler()</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    X_train_scaled <span class="op">=</span> scaler.fit_transform(X_train)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    X_test_scaled <span class="op">=</span> scaler.transform(X_test)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> X_train_scaled, X_test_scaled, scaler</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train_model(X_train_scaled, y_train):</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> RandomForestRegressor(n_estimators<span class="op">=</span><span class="dv">100</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    model.fit(X_train_scaled, y_train)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate_model(model, X_scaled, y_true, dataset_name<span class="op">=</span><span class="st">"Test"</span>):</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    y_pred <span class="op">=</span> model.predict(X_scaled)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    r2 <span class="op">=</span> r2_score(y_true, y_pred)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    rmse <span class="op">=</span> np.sqrt(mean_squared_error(y_true, y_pred))</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="sc">{</span>dataset_name<span class="sc">}</span><span class="ss"> Evaluation:"</span>)</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"R²: </span><span class="sc">{</span>r2<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"RMSE: </span><span class="sc">{</span>rmse<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> y_pred, r2, rmse</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section>
+<h2 class="anchored" data-anchor-id="model-evaluation">
+Model Workflow (Pipeline)
+</h2>
+<p align="justify">
+The complete model development process follows a structured pipeline to ensure consistency, reproducibility, and clarity. Each stage in the workflow is modularized into independent functions, which can be reused for different water quality parameters. This modular approach helps streamline the process and makes the workflow easily adaptable to new datasets or parameters in the future.
+</p>
+<p align="justify">
+The pipeline automates the sequence of steps — from data preparation to evaluation — for each target parameter. The same set of predictor variables is used, while the response variable changes for each of the three targets: <i>Total Alkalinity (TA)</i>, <i>Electrical Conductance (EC)</i>, and <i>Dissolved Reactive Phosphorus (DRP)</i>. By maintaining a consistent framework, comparisons across models remain fair and interpretable.
+</p>
+<div id="40808f99-8014-4746-91ae-5b64c61e04a7" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_pipeline(X, y, param_name<span class="op">=</span><span class="st">"Parameter"</span>):</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="sc">{</span><span class="st">'='</span><span class="op">*</span><span class="dv">60</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Training Model for </span><span class="sc">{</span>param_name<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'='</span><span class="op">*</span><span class="dv">60</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Split data</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    X_train, X_test, y_train, y_test <span class="op">=</span> split_data(X, y)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Scale</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    X_train_scaled, X_test_scaled, scaler <span class="op">=</span> scale_data(X_train, X_test)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Train</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> train_model(X_train_scaled, y_train)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Evaluate (in-sample)</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    y_train_pred, r2_train, rmse_train <span class="op">=</span> evaluate_model(model, X_train_scaled, y_train, <span class="st">"Train"</span>)</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Evaluate (out-sample)</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    y_test_pred, r2_test, rmse_test <span class="op">=</span> evaluate_model(model, X_test_scaled, y_test, <span class="st">"Test"</span>)</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Return summary</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> {</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Parameter"</span>: param_name,</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>        <span class="st">"R2_Train"</span>: r2_train,</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>        <span class="st">"RMSE_Train"</span>: rmse_train,</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>        <span class="st">"R2_Test"</span>: r2_test,</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>        <span class="st">"RMSE_Test"</span>: rmse_test</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model, scaler, pd.DataFrame([results])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="model-training-and-evaluation-for-each-parameter" class="level3">
+<h3 class="anchored" data-anchor-id="model-training-and-evaluation-for-each-parameter">Model Training and Evaluation for Each Parameter</h3>
+<p align="justify">
+In this step, we apply the complete modeling pipeline to each of the three selected water quality parameters — Total Alkalinity, Electrical Conductance, and Dissolved Reactive Phosphorus. The input feature set (<code>X</code>) remains the same across all three models, while the target variable (<code>y</code>) changes for each parameter. For every parameter, the <code>run_pipeline()</code> function is executed, which handles data preprocessing, model training, and both in-sample and out-of-sample evaluation. This ensures a consistent workflow and allows for a fair comparison of model performance across different water quality indicators.
+</p>
+<div id="d2d5f62b-585c-45e0-8fa9-73a5fa1248f8" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> wq_data.drop(columns<span class="op">=</span>[<span class="st">'Total Alkalinity'</span>, <span class="st">'Electrical Conductance'</span>, <span class="st">'Dissolved Reactive Phosphorus'</span>])</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>y_TA <span class="op">=</span> wq_data[<span class="st">'Total Alkalinity'</span>]</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>y_EC <span class="op">=</span> wq_data[<span class="st">'Electrical Conductance'</span>]</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>y_DRP <span class="op">=</span> wq_data[<span class="st">'Dissolved Reactive Phosphorus'</span>]</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>model_TA, scaler_TA, results_TA <span class="op">=</span> run_pipeline(X, y_TA, <span class="st">"Total Alkalinity"</span>)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>model_EC, scaler_EC, results_EC <span class="op">=</span> run_pipeline(X, y_EC, <span class="st">"Electrical Conductance"</span>)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>model_DRP, scaler_DRP, results_DRP <span class="op">=</span> run_pipeline(X, y_DRP, <span class="st">"Dissolved Reactive Phosphorus"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+============================================================
+Training Model for Total Alkalinity
+============================================================
+
+Train Evaluation:
+R²: 0.903
+RMSE: 23.132
+
+Test Evaluation:
+R²: 0.546
+RMSE: 50.870
+
+============================================================
+Training Model for Electrical Conductance
+============================================================
+
+Train Evaluation:
+R²: 0.918
+RMSE: 98.007
+
+Test Evaluation:
+R²: 0.585
+RMSE: 219.999
+
+============================================================
+Training Model for Dissolved Reactive Phosphorus
+============================================================
+
+Train Evaluation:
+R²: 0.882
+RMSE: 17.455
+
+Test Evaluation:
+R²: 0.529
+RMSE: 35.182</code></pre>
+</div>
+</div>
+</section>
+<section id="model-performance-summary" class="level3">
+<h3 class="anchored" data-anchor-id="model-performance-summary">Model Performance Summary</h3>
+<p align="justify">
+After training and evaluating the models for each water quality parameter, the individual performance metrics are combined into a single summary table. This table consolidates the R² and RMSE values for both in-sample and out-of-sample evaluations, enabling an easy comparison of model performance across Total Alkalinity, Electrical Conductance, and Dissolved Reactive Phosphorus. Such a summary provides a quick overview of how well each model captures the variability in the respective parameter and highlights any differences in predictive accuracy.
+</p>
+<div id="c7f3a047-a05c-4369-8a84-5b287f1ff272" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>results_summary <span class="op">=</span> pd.concat([results_TA, results_EC, results_DRP], ignore_index<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>results_summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Parameter</th>
+<th data-quarto-table-cell-role="th">R2_Train</th>
+<th data-quarto-table-cell-role="th">RMSE_Train</th>
+<th data-quarto-table-cell-role="th">R2_Test</th>
+<th data-quarto-table-cell-role="th">RMSE_Test</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>Total Alkalinity</td>
+<td>0.903199</td>
+<td>23.132468</td>
+<td>0.545661</td>
+<td>50.870362</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>Electrical Conductance</td>
+<td>0.917884</td>
+<td>98.007101</td>
+<td>0.585458</td>
+<td>219.998675</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>Dissolved Reactive Phosphorus</td>
+<td>0.882169</td>
+<td>17.454757</td>
+<td>0.529145</td>
+<td>35.181776</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="submission" class="level2">
+<h2 class="anchored" data-anchor-id="submission">Submission</h2>
+<p align="justify">
+Once you are satisfied with your model’s performance, you can proceed to make predictions for unseen data. To do this, use your trained model to estimate the concentrations of the target water quality parameters — Total Alkalinity, Electrical Conductance, and Dissolved Reactive Phosphorus — for a set of test locations provided in the “Submission_template.csv” file. The predicted results can then be uploaded to the challenge platform for evaluation.
+</p>
+<div id="c561f152-2058-4c0a-b458-835892607989" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Reading the coordinates for the submission</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>test_file <span class="op">=</span> pd.read_csv(<span class="st">'submission_template.csv'</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>test_file.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Latitude</th>
+<th data-quarto-table-cell-role="th">Longitude</th>
+<th data-quarto-table-cell-role="th">Sample Date</th>
+<th data-quarto-table-cell-role="th">Total Alkalinity</th>
+<th data-quarto-table-cell-role="th">Electrical Conductance</th>
+<th data-quarto-table-cell-role="th">Dissolved Reactive Phosphorus</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>-32.043333</td>
+<td>27.822778</td>
+<td>01-09-2014</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>-33.329167</td>
+<td>26.077500</td>
+<td>16-09-2015</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>-32.991639</td>
+<td>27.640028</td>
+<td>07-05-2015</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>-34.096389</td>
+<td>24.439167</td>
+<td>07-02-2012</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>-32.000556</td>
+<td>28.581667</td>
+<td>01-10-2014</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p align="justify">
+Similarly, participants can use the <b>Landsat</b> and <b>TerraClimate</b> data extraction demonstration notebooks to produce feature CSVs for their <b>validation</b> data. For convenience, we have already computed and saved example validation outputs as <code>landsat_features_val_V3.csv</code> and <code>Terraclimate_val_df_v3.csv</code>. Participants should save their own extracted files in the same format and column schema; doing so will allow this benchmark notebook to load the validation features directly and run smoothly.
+</p>
+<div id="9c79a123-b5d1-482a-b82e-2b1ef87773e5" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>landsat_val_features <span class="op">=</span> pd.read_csv(<span class="st">'landsat_features_validation.csv'</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>landsat_val_features.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Latitude</th>
+<th data-quarto-table-cell-role="th">Longitude</th>
+<th data-quarto-table-cell-role="th">Sample Date</th>
+<th data-quarto-table-cell-role="th">nir</th>
+<th data-quarto-table-cell-role="th">green</th>
+<th data-quarto-table-cell-role="th">swir16</th>
+<th data-quarto-table-cell-role="th">swir22</th>
+<th data-quarto-table-cell-role="th">NDMI</th>
+<th data-quarto-table-cell-role="th">MNDWI</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>-32.043333</td>
+<td>27.822778</td>
+<td>01-09-2014</td>
+<td>15229.0</td>
+<td>12868.0</td>
+<td>14797.0</td>
+<td>12421.0</td>
+<td>0.014388</td>
+<td>-0.069727</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>-33.329167</td>
+<td>26.077500</td>
+<td>16-09-2015</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>-32.991639</td>
+<td>27.640028</td>
+<td>07-05-2015</td>
+<td>16221.0</td>
+<td>9304.5</td>
+<td>12536.5</td>
+<td>9958.0</td>
+<td>0.128123</td>
+<td>-0.147979</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>-34.096389</td>
+<td>24.439167</td>
+<td>07-02-2012</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>-32.000556</td>
+<td>28.581667</td>
+<td>01-10-2014</td>
+<td>9125.0</td>
+<td>11100.5</td>
+<td>9455.0</td>
+<td>8711.0</td>
+<td>-0.017761</td>
+<td>0.080052</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="2d5c5ce3-6665-4ba0-8f8a-99d34be8ddce" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>Terraclimate_val_df <span class="op">=</span> pd.read_csv(<span class="st">'terraclimate_features_validation.csv'</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>Terraclimate_val_df.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="15">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Latitude</th>
+<th data-quarto-table-cell-role="th">Longitude</th>
+<th data-quarto-table-cell-role="th">Sample Date</th>
+<th data-quarto-table-cell-role="th">pet</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>-32.043333</td>
+<td>27.822778</td>
+<td>01-09-2014</td>
+<td>161.90001</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>-33.329167</td>
+<td>26.077500</td>
+<td>16-09-2015</td>
+<td>177.60000</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>-32.991639</td>
+<td>27.640028</td>
+<td>07-05-2015</td>
+<td>158.40001</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>-34.096389</td>
+<td>24.439167</td>
+<td>07-02-2012</td>
+<td>130.00000</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>-32.000556</td>
+<td>28.581667</td>
+<td>01-10-2014</td>
+<td>152.50000</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="d1dabb48-7f82-4acf-b509-21cc15a5a4e0" class="cell" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Consolidate all the extracted bands and features in a single dataframe</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>val_data <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Longitude'</span>: landsat_val_features[<span class="st">'Longitude'</span>].values,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Latitude'</span>: landsat_val_features[<span class="st">'Latitude'</span>].values,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Sample Date'</span>: landsat_val_features[<span class="st">'Sample Date'</span>].values,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'nir'</span>: landsat_val_features[<span class="st">'nir'</span>].values,</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">'green'</span>: landsat_val_features[<span class="st">'green'</span>].values,</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">'swir16'</span>: landsat_val_features[<span class="st">'swir16'</span>].values,</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">'swir22'</span>: landsat_val_features[<span class="st">'swir22'</span>].values,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">'NDMI'</span>: landsat_val_features[<span class="st">'NDMI'</span>].values,</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">'MNDWI'</span>: landsat_val_features[<span class="st">'MNDWI'</span>].values,</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">'pet'</span>: Terraclimate_val_df[<span class="st">'pet'</span>].values,</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="5c41d268-0657-490b-94f3-8ffeb67c2265" class="cell" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Impute the missing values</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>val_data <span class="op">=</span> val_data.fillna(val_data.median(numeric_only<span class="op">=</span><span class="va">True</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="3126bf77-fb54-4609-a09c-8e36b496d108" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extracting specific columns (swir22, NDMI, MNDWI, pet) from the validation dataset</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>submission_val_data<span class="op">=</span>val_data.loc[:,[<span class="st">'swir22'</span>,<span class="st">'NDMI'</span>,<span class="st">'MNDWI'</span>,<span class="st">'pet'</span>]]</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>submission_val_data.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="18">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">swir22</th>
+<th data-quarto-table-cell-role="th">NDMI</th>
+<th data-quarto-table-cell-role="th">MNDWI</th>
+<th data-quarto-table-cell-role="th">pet</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>12421.0</td>
+<td>0.014388</td>
+<td>-0.069727</td>
+<td>161.90001</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>9973.0</td>
+<td>0.081427</td>
+<td>-0.130571</td>
+<td>177.60000</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>9958.0</td>
+<td>0.128123</td>
+<td>-0.147979</td>
+<td>158.40001</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>9973.0</td>
+<td>0.081427</td>
+<td>-0.130571</td>
+<td>130.00000</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>8711.0</td>
+<td>-0.017761</td>
+<td>0.080052</td>
+<td>152.50000</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="d7b033c7-3d5f-4179-b8f8-182f8caad0dc" class="cell" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>submission_val_data.shape</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="19">
+<pre><code>(200, 4)</code></pre>
+</div>
+</div>
+<div id="87b59132-ff14-421e-b37b-472a0adcd9da" class="cell" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Predicting for Total Alkalinity ---</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>X_sub_scaled_TA <span class="op">=</span> scaler_TA.transform(submission_val_data)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>pred_TA_submission <span class="op">=</span> model_TA.predict(X_sub_scaled_TA)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Predicting for Electrical Conductance ---</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>X_sub_scaled_EC <span class="op">=</span> scaler_EC.transform(submission_val_data)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>pred_EC_submission <span class="op">=</span> model_EC.predict(X_sub_scaled_EC)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Predicting for Dissolved Reactive Phosphorus ---</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>X_sub_scaled_DRP <span class="op">=</span> scaler_DRP.transform(submission_val_data)</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>pred_DRP_submission <span class="op">=</span> model_DRP.predict(X_sub_scaled_DRP)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="398e375c-60cc-4fa5-a697-ae12fdab300c" class="cell" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>submission_df <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Longitude'</span>: test_file[<span class="st">'Longitude'</span>].values,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Latitude'</span>: test_file[<span class="st">'Latitude'</span>].values,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Sample Date'</span>: test_file[<span class="st">'Sample Date'</span>].values,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Total Alkalinity'</span>: pred_TA_submission,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Electrical Conductance'</span>: pred_EC_submission,</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Dissolved Reactive Phosphorus'</span>: pred_DRP_submission</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="46e1c4fa-e49f-40cf-ac10-729b82c4b37b" class="cell" data-execution_count="22">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Displaying the sample submission dataframe</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>submission_df.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="22">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Longitude</th>
+<th data-quarto-table-cell-role="th">Latitude</th>
+<th data-quarto-table-cell-role="th">Sample Date</th>
+<th data-quarto-table-cell-role="th">Total Alkalinity</th>
+<th data-quarto-table-cell-role="th">Electrical Conductance</th>
+<th data-quarto-table-cell-role="th">Dissolved Reactive Phosphorus</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>27.822778</td>
+<td>-32.043333</td>
+<td>01-09-2014</td>
+<td>114.833126</td>
+<td>314.267271</td>
+<td>25.235333</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>26.077500</td>
+<td>-33.329167</td>
+<td>16-09-2015</td>
+<td>156.957291</td>
+<td>648.500033</td>
+<td>60.455833</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>27.640028</td>
+<td>-32.991639</td>
+<td>07-05-2015</td>
+<td>62.877980</td>
+<td>724.577283</td>
+<td>29.445333</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>24.439167</td>
+<td>-34.096389</td>
+<td>07-02-2012</td>
+<td>72.334447</td>
+<td>234.950986</td>
+<td>13.726667</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>28.581667</td>
+<td>-32.000556</td>
+<td>01-10-2014</td>
+<td>109.078753</td>
+<td>304.010200</td>
+<td>30.210000</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="0d3a8c41-dba2-43e4-b84c-a50a096980e7" class="cell" data-execution_count="23">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Dumping the predictions into a csv file.</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>submission_df.to_csv(<span class="st">"submission.csv"</span>,index <span class="op">=</span> <span class="va">False</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="upload-submission-file-on-platform" class="level3">
+<h3 class="anchored" data-anchor-id="upload-submission-file-on-platform">Upload submission file on platform</h3>
+<p>Upload the submission.csv on the <a href="https://challenge.ey.com">platform</a> to get score generated on scoreboard.</p>
+</section>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<div data-align="justify">
+Now that you have learned a basic approach to model training, it’s time to try your own approach! Feel free to modify any of the functions presented in this notebook. We look forward to seeing your version of the model and the results. Best of luck with the challenge!
+</div>
+
+
+</section>
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/monica-phan26\.github\.io\/STA9750-2026-SPRING\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

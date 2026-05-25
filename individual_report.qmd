@@ -426,9 +426,9 @@ plot_map <- function(var, title, unit_label, palette) {
 }
 
 # Compose the three panels side-by-side with a shared title above
-(plot_map("Dissolved Reactive Phosphorus", "Dissolved Reactive Phosphorus",  "DRP\n(μg/L)",        "inferno") |
- plot_map("Total Alkalinity",              " Total Alkalinity",  "TA\n(mg/L)",         "viridis") |
- plot_map("Electrical Conductance",        "Electrical Conductance", "EC\n(mS/m)",         "plasma")) +
+(plot_map("DRP", "Dissolved Reactive Phosphorus",  "DRP\n(μg/L)",        "inferno") |
+ plot_map("TA",              " Total Alkalinity",  "TA\n(mg/L)",         "viridis") |
+ plot_map("EC",        "Electrical Conductance", "EC\n(mS/m)",         "plasma")) +
   plot_annotation(
     title    = "Spatial distribution of water-quality degradation indicators",
     subtitle = "Each station colored by its 2011–2015 median value",
